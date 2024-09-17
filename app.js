@@ -4,6 +4,7 @@ const cors = require("cors")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const loginModel = require("./model/admin")
+const DoctorModel = require("./model/doctors")
 const app = express()
 app.use(cors())
 app.use(express.json())
@@ -47,6 +48,51 @@ app.post("/AdminSignIn", (req, res) => {
         }
     ).catch()
 })
+//Add Doctor
+app.post("/AddDoctor", (req, res) => {
+    let input = req.body
+    let token = req.headers.token
+    jwt.verify(token, "patient-app",
+        (error, decoded) => {
+            if (decoded && decoded.username) {
+                let result = new DoctorModel(input)
+                result.save()
+                res.json({ "status": "success" })
+            }
+            else {
+                res.json({ "status": "invalid authentication" })
+            }
+        }
+
+    )
+})
+//patient sign in
+app.post("/PatientSignIn", (req, res) => {
+    input = req.body
+    let result = PatientModel.find({ patientid: input.patientid }).then(
+        (response) => {
+            if (response.length > 0) {
+                const validator = bcrypt.compareSync(input.password, response[0].password)
+                if (validator) {
+                    jwt.sign({ id: input.patientid }, "patient-app", { expiresIn: "1d" },
+                        (error, token) => {
+                            if (error) {
+                                res.json({ "status": "Something went wrong" })
+                            } else {
+                                res.json({ "status": "success", "token": token })
+                            }
+                        }
+                    )
+                } else {
+                    res.json({ "status": "Invalid password" })
+                }
+            } else {
+                res.json({ "status": "Invalid patient-Id" })
+            }
+        }
+    ).catch()
+})
+
 
 app.listen("8080", () => {
     console.log("server started")
