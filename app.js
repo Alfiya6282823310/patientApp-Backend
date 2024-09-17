@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const loginModel = require("./model/admin")
 const DoctorModel = require("./model/doctors")
+const PatientModel = require("./model/patient")
 const app = express()
 app.use(cors())
 app.use(express.json())
@@ -65,6 +66,27 @@ app.post("/AddDoctor", (req, res) => {
         }
 
     )
+})
+//add patient
+app.post("/Addpatient",(req,res)=>{
+    let input=req.body
+    let hashedPassword = bcrypt.hashSync(input.password,10)
+    input.password = hashedPassword
+    const DateObject = new Date()
+    const currentYear = DateObject.getFullYear()
+    //console.log(currentYear.toString())
+    const currentMonth = DateObject.getMonth()+1
+    //console.log(currentMonth.toString())
+    const randomNumber = Math.floor(Math.random()*9999)+1000
+    //console.log(randomNumber.toString())
+    const patientid = "XYZ"+currentYear.toString()+currentMonth.toString()+randomNumber.toString()
+    console.log(patientid)
+    input.patientid = patientid
+    console.log(patientid)
+    console.log(input)
+    const patient = new PatientModel(input)
+    patient.save()
+    res.json({"status":"success"})
 })
 //patient sign in
 app.post("/PatientSignIn", (req, res) => {
